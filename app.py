@@ -1,8 +1,9 @@
+import json
 import math
 import streamlit as st
 
 st.set_page_config(
-  page_title="Workstyle 16",
+  page_title="Workstyle 16 — Technical Archetype Assessment",
   page_icon="◈",
   layout="wide",
   initial_sidebar_state="collapsed",
@@ -309,296 +310,625 @@ AXES = [
 
 CSS = """
 <style>
+  /* Reset and base styles - hide ONLY Streamlit internal chrome */
+  #MainMenu { display: none !important; }
+  [data-testid="stHeader"] { display: none !important; }
+  [data-testid="stToolbar"] { display: none !important; }
+  [data-testid="stDecoration"] { display: none !important; }
+  [data-testid="stStatusWidget"] { display: none !important; }
+
+  :root {
+    --bg: #0b0d10;
+    --panel: rgba(22, 25, 31, 0.78);
+    --panel-2: rgba(28, 32, 39, 0.92);
+    --text: #f3f4f6;
+    --muted: #9aa3b2;
+    --line: rgba(255, 255, 255, 0.09);
+    --accent: #8ea2ff;
+    --accent-2: #66d9c6;
+    --danger: #ff8e8e;
+    --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    --radius: 24px;
+  }
+
+  html { scroll-behavior: smooth; }
+
   [data-testid="stAppViewContainer"] {
     background:
-      radial-gradient(circle at 12% 8%, rgba(91,113,255,.15), transparent 26%),
-      radial-gradient(circle at 88% 18%, rgba(70,208,188,.10), transparent 24%),
-      linear-gradient(180deg, #0b0d10 0%, #10131a 100%);
-    color: #f3f4f6;
+      radial-gradient(circle at 15% 10%, rgba(91, 113, 255, 0.16), transparent 28%),
+      radial-gradient(circle at 88% 18%, rgba(70, 208, 188, 0.12), transparent 26%),
+      linear-gradient(180deg, #0b0d10 0%, #0f1218 100%) !important;
+    color: #f3f4f6 !important;
+    font-family: Inter, Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    letter-spacing: -0.02em;
+    min-height: 100vh;
   }
 
-  [data-testid="stHeader"] { background: transparent; }
-  [data-testid="stToolbar"] { right: 1rem; }
+  [data-testid="stAppViewContainer"]::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image:
+      radial-gradient(circle at 20% 20%, #fff 0 1px, transparent 1px),
+      radial-gradient(circle at 80% 40%, #fff 0 1px, transparent 1px);
+    background-size: 18px 18px, 22px 22px;
+    z-index: 0;
+  }
+
   .block-container {
-    max-width: 1120px;
-    padding-top: 2rem;
-    padding-bottom: 4rem;
+    max-width: 1120px !important;
+    padding-top: 28px !important;
+    padding-bottom: 64px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    position: relative;
+    z-index: 1;
   }
 
-  h1, h2, h3, p, div { letter-spacing: -0.02em; }
+  /* Topbar header */
+  .topbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    margin-bottom: 36px !important;
+    width: 100% !important;
+    visibility: visible !important;
+  }
 
   .brand {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    font-weight: 750;
-    margin-bottom: 2.5rem;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    font-weight: 700 !important;
+    font-size: 18px !important;
+    color: #f3f4f6 !important;
   }
 
   .brand-mark {
-    width: 32px;
-    height: 32px;
-    display: inline-grid;
-    place-items: center;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,.10);
-    background: linear-gradient(145deg, rgba(142,162,255,.18), rgba(102,217,198,.12));
+    width: 34px !important;
+    height: 34px !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    border-radius: 10px !important;
+    display: grid !important;
+    place-items: center !important;
+    background: linear-gradient(145deg, rgba(142, 162, 255, 0.18), rgba(102, 217, 198, 0.12)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    position: relative !important;
   }
 
-  .brand-mark span {
-    width: 11px;
-    height: 11px;
-    border: 2px solid #8ea2ff;
-    transform: rotate(45deg);
-    border-radius: 3px;
+  .brand-mark::before {
+    content: "" !important;
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 4px !important;
+    border: 2px solid #8ea2ff !important;
+    transform: rotate(45deg) !important;
+    display: block !important;
   }
 
   .pill {
-    display: inline-block;
-    border: 1px solid rgba(255,255,255,.10);
-    background: rgba(255,255,255,.035);
-    color: #9aa3b2;
-    border-radius: 999px;
-    padding: .42rem .7rem;
-    font-size: .78rem;
-    margin-bottom: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    background: rgba(255, 255, 255, 0.035) !important;
+    color: #9aa3b2 !important;
+    border-radius: 999px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    display: inline-block !important;
+  }
+
+  /* Intro Section */
+  .st-key-hero_left_container {
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    background: rgba(22, 25, 31, 0.78) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35) !important;
+    padding: 44px !important;
+    min-height: 480px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
   }
 
   .eyebrow {
     color: #66d9c6;
+    font-size: 13px;
     text-transform: uppercase;
-    letter-spacing: .12em;
-    font-size: .76rem;
+    letter-spacing: 0.12em;
     font-weight: 800;
-    margin-bottom: .8rem;
+    margin-bottom: 16px;
   }
 
   .hero-title {
-    font-size: clamp(3.2rem, 7vw, 6.4rem);
-    line-height: .92;
-    letter-spacing: -.06em;
-    font-weight: 820;
-    margin: 0 0 1.5rem 0;
+    font-size: clamp(38px, 6vw, 76px);
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+    margin: 0 0 22px;
+    font-weight: 800;
+    color: #f3f4f6;
   }
 
   .hero-copy {
     color: #9aa3b2;
-    font-size: 1.05rem;
-    line-height: 1.75;
-    max-width: 720px;
-    margin-bottom: 1.75rem;
+    font-size: clamp(15px, 1.8vw, 19px);
+    line-height: 1.65;
+    margin: 0 0 28px 0;
   }
 
-  .glass {
-    border: 1px solid rgba(255,255,255,.09);
-    background: rgba(22,25,31,.74);
+  .hero-card-right {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(22, 25, 31, 0.78);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 24px;
-    padding: 2rem;
-    box-shadow: 0 24px 80px rgba(0,0,0,.32);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 480px;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    color: #f3f4f6;
+    margin-bottom: 5px;
+  }
+
+  .stat span {
+    color: #9aa3b2;
+    font-size: 12px;
+  }
+
+  .matrix {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    align-content: end;
+  }
+
+  .matrix div {
+    aspect-ratio: 1;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+    display: flex;
+    align-items: flex-end;
+    padding: 12px;
+    color: #d9def7;
+    font-size: 12px;
+    font-weight: 700;
+    transition: 0.25s ease;
+  }
+
+  .matrix div:hover {
+    transform: translateY(-3px) rotate(-1deg);
+    border-color: rgba(142, 162, 255, 0.35);
+  }
+
+  .philosophy {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 24px;
+    margin-bottom: 28px;
   }
 
   .mini-card {
-    border: 1px solid rgba(255,255,255,.09);
-    background: rgba(255,255,255,.026);
-    border-radius: 18px;
-    padding: 1.2rem;
-    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(22, 25, 31, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 22px;
   }
 
-  .mini-card strong {
-    display: block;
-    margin-bottom: .45rem;
+  .mini-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #f3f4f6;
   }
 
-  .mini-card span {
+  .mini-card p {
+    margin: 0;
     color: #9aa3b2;
-    font-size: .9rem;
     line-height: 1.55;
+    font-size: 14px;
   }
 
-  .progress-meta {
+  /* Button styling matching HTML */
+  .st-key-start_btn button {
+    border: none !important;
+    color: #0b0d10 !important;
+    background: linear-gradient(135deg, #8ea2ff, #bac5ff) !important;
+    border-radius: 14px !important;
+    padding: 13px 24px !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    transition: 0.2s ease !important;
+    box-shadow: 0 4px 16px rgba(142, 162, 255, 0.2) !important;
+    width: auto !important;
+  }
+
+  .st-key-start_btn button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 24px rgba(142, 162, 255, 0.35) !important;
+  }
+
+  .btn-anchor {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f3f4f6;
+    border-radius: 14px;
+    padding: 13px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s ease;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  .btn-anchor:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.07);
+    color: #f3f4f6;
+  }
+
+  /* Quiz Section */
+  .quiz-sidebar {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 20px;
+    background: rgba(18, 21, 26, 0.78);
+    padding: 20px;
+    position: sticky;
+    top: 24px;
+  }
+
+  .quiz-sidebar small {
     color: #9aa3b2;
-    font-size: .86rem;
-    margin-bottom: .35rem;
+    font-size: 13px;
+    line-height: 1.5;
+    display: block;
   }
 
-  .progress-count {
-    font-size: 1.8rem;
-    font-weight: 760;
-    margin-bottom: .45rem;
+  .quiz-sidebar strong {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f3f4f6;
+    display: block;
+    margin: 4px 0 12px;
   }
 
-  .question-number {
+  .progress-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 12px 0 18px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8ea2ff, #66d9c6);
+    border-radius: 99px;
+    transition: width 0.25s ease;
+  }
+
+  .st-key-quiz_card_container {
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    background: rgba(22, 25, 31, 0.78) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35) !important;
+    padding: clamp(24px, 4.5vw, 46px) !important;
+    min-height: 520px !important;
+  }
+
+  .q-number {
     color: #66d9c6;
+    font-size: 13px;
     font-weight: 800;
-    letter-spacing: .08em;
-    font-size: .78rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: 1rem;
+    margin-bottom: 18px;
   }
 
   .question-text {
-    font-size: clamp(1.65rem, 3vw, 2.55rem);
-    line-height: 1.32;
-    letter-spacing: -.04em;
-    font-weight: 750;
-    margin-bottom: 1.4rem;
-  }
-
-  div.stButton > button {
-    width: 100%;
-    text-align: left;
-    justify-content: flex-start;
-    white-space: normal;
-    border-radius: 15px;
-    min-height: 3.5rem;
-    padding: .85rem 1rem;
-    border: 1px solid rgba(255,255,255,.09);
-    background: rgba(255,255,255,.028);
-    color: #f3f4f6;
-    transition: all .16s ease;
-  }
-
-  div.stButton > button:hover {
-    border-color: rgba(142,162,255,.5);
-    background: rgba(142,162,255,.08);
-    transform: translateX(2px);
+    font-size: clamp(24px, 3.6vw, 36px);
+    line-height: 1.3;
+    letter-spacing: -0.035em;
+    margin: 0 0 26px;
+    font-weight: 700;
     color: #f3f4f6;
   }
 
-  div.stButton > button:focus:not(:active) {
-    border-color: rgba(142,162,255,.5);
-    color: #f3f4f6;
+  /* Answer Buttons in Quiz */
+  .st-key-quiz_card_container div[data-testid="stButton"] {
+    margin-bottom: 12px !important;
+  }
+
+  .st-key-quiz_card_container div[data-testid="stButton"] > button {
+    width: 100% !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    background: rgba(255, 255, 255, 0.025) !important;
+    color: #f3f4f6 !important;
+    padding: 18px 20px !important;
+    border-radius: 16px !important;
+    line-height: 1.5 !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    white-space: normal !important;
+    min-height: unset !important;
+    transition: 0.18s ease !important;
+  }
+
+  .st-key-quiz_card_container div[data-testid="stButton"] > button:hover {
+    border-color: rgba(142, 162, 255, 0.42) !important;
+    background: rgba(142, 162, 255, 0.07) !important;
+    transform: translateX(3px) !important;
+    color: #f3f4f6 !important;
+  }
+
+  .st-key-prev_btn button {
+    width: auto !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #f3f4f6 !important;
+    border-radius: 14px !important;
+    padding: 11px 22px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    transition: 0.2s ease !important;
+    margin-top: 16px !important;
+  }
+
+  .st-key-prev_btn button:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .st-key-prev_btn button:disabled {
+    opacity: 0.35 !important;
+    cursor: default !important;
+    transform: none !important;
+  }
+
+  /* Result Screen */
+  .st-key-result_card_container {
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    background: rgba(22, 25, 31, 0.78) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35) !important;
+    padding: clamp(28px, 5vw, 54px) !important;
+  }
+
+  .result-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 36px;
   }
 
   .type-code {
-    font-size: clamp(4.6rem, 10vw, 8rem);
-    line-height: .88;
-    letter-spacing: -.07em;
-    font-weight: 820;
-    margin: .35rem 0 .8rem;
+    font-size: clamp(56px, 10vw, 108px);
+    line-height: 0.9;
+    letter-spacing: -0.07em;
+    font-weight: 800;
+    margin: 10px 0 12px;
+    color: #f3f4f6;
   }
 
   .type-name {
     color: #66d9c6;
-    font-size: 1.15rem;
+    font-size: 18px;
     font-weight: 800;
-    margin-bottom: 1.2rem;
+    margin-bottom: 12px;
   }
 
-  .summary {
-    color: #9aa3b2;
-    line-height: 1.75;
-    font-size: 1rem;
+  .type-summary {
     max-width: 760px;
+    color: #9aa3b2;
+    line-height: 1.7;
+    font-size: 16px;
+    margin: 0;
   }
 
-  .fit-box {
-    border: 1px solid rgba(255,255,255,.09);
-    background: rgba(255,255,255,.026);
+  .distance-badge {
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 18px;
-    padding: 1rem 1.15rem;
+    padding: 16px;
+    min-width: 160px;
+    background: rgba(255, 255, 255, 0.025);
     text-align: center;
   }
 
-  .fit-box span {
+  .distance-badge span {
     color: #9aa3b2;
-    font-size: .75rem;
-  }
-
-  .fit-box strong {
+    font-size: 12px;
     display: block;
-    font-size: 2rem;
-    margin-top: .2rem;
   }
 
-  .axis-labels {
-    display:flex;
-    justify-content:space-between;
-    font-size:.82rem;
-    color:#9aa3b2;
-    margin-bottom:.35rem;
-  }
-
-  .axis-title {
-    font-weight: 760;
+  .distance-badge strong {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 4px;
     color: #f3f4f6;
+  }
+
+  .axes {
+    display: grid;
+    gap: 18px;
+    margin: 36px 0;
+  }
+
+  .axis-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .axis-label {
+    font-weight: 800;
+    font-size: 14px;
+    color: #f3f4f6;
+    line-height: 1.3;
+  }
+
+  .axis-label small {
+    color: #9aa3b2;
+    font-weight: 500;
+    font-size: 12px;
+    display: block;
+  }
+
+  .axis-label.right {
+    text-align: right;
+    color: #9aa3b2;
   }
 
   .axis-track {
     position: relative;
     height: 10px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.07);
-    margin-bottom: 1.35rem;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 99px;
   }
 
-  .axis-track::after {
-    content: "";
+  .axis-mid {
     position: absolute;
     left: 50%;
-    top: -3px;
-    bottom: -3px;
+    top: -4px;
+    bottom: -4px;
     width: 1px;
-    background: rgba(255,255,255,.18);
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .axis-dot {
-    position:absolute;
-    top:50%;
-    width:18px;
-    height:18px;
-    margin-left:-9px;
-    margin-top:-9px;
-    border-radius:50%;
-    background:#f3f4f6;
-    border:4px solid #8ea2ff;
-    box-shadow:0 0 0 6px rgba(142,162,255,.08);
-    z-index:2;
+    position: absolute;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    margin-top: -9px;
+    margin-left: -9px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    border: 4px solid #8ea2ff;
+    box-shadow: 0 0 0 6px rgba(142, 162, 255, 0.09);
+    transition: left 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  .alt-card {
-    border: 1px solid rgba(255,255,255,.09);
-    background: rgba(255,255,255,.026);
-    border-radius: 16px;
-    padding: 1rem;
-    height: 100%;
+  .alternatives {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 14px;
   }
 
-  .alt-card strong {
-    font-size: 1.55rem;
-    display:block;
-    margin-bottom:.25rem;
+  .alt {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.025);
   }
 
-  .alt-card span {
-    color:#9aa3b2;
-    font-size:.82rem;
+  .alt strong {
+    font-size: 24px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 5px;
+    color: #f3f4f6;
+  }
+
+  .alt span {
+    color: #9aa3b2;
+    font-size: 13px;
   }
 
   .fineprint {
-    color:#707987;
-    font-size:.78rem;
-    line-height:1.6;
-    margin-top:1.5rem;
+    color: #737c8b;
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 28px;
+    margin-bottom: 24px;
+  }
+
+  .st-key-restart_btn button {
+    border: none !important;
+    color: #0b0d10 !important;
+    background: linear-gradient(135deg, #8ea2ff, #bac5ff) !important;
+    border-radius: 14px !important;
+    padding: 13px 24px !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    transition: 0.2s ease !important;
+    box-shadow: 0 4px 16px rgba(142, 162, 255, 0.2) !important;
+    width: auto !important;
+  }
+
+  .st-key-restart_btn button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 24px rgba(142, 162, 255, 0.35) !important;
   }
 
   .footer {
-    text-align:center;
-    color:#626b78;
-    font-size:.76rem;
-    padding-top:2rem;
+    text-align: center;
+    color: #66707f;
+    font-size: 12px;
+    padding-top: 34px;
   }
 
-  [data-testid="stProgress"] > div > div {
-    background-image: linear-gradient(90deg, #8ea2ff, #66d9c6);
+  /* Responsive layout adjustments */
+  @media (max-width: 860px) {
+    .st-key-hero_left_container { min-height: 420px; padding: 34px !important; }
+    .philosophy { grid-template-columns: 1fr; }
+    .result-head { grid-template-columns: 1fr; }
+    .alternatives { grid-template-columns: 1fr; }
+    .axis-row { grid-template-columns: 58px 1fr 58px; gap: 8px; }
+    .hero-stats { grid-template-columns: 1fr; }
+    .quiz-sidebar { position: static; margin-bottom: 18px; }
   }
 
-  @media (max-width: 700px) {
-    .block-container { padding-left: 1rem; padding-right: 1rem; }
-    .glass { padding: 1.3rem; border-radius: 18px; }
-    .hero-title { font-size: 3.7rem; }
+  @media (max-width: 520px) {
+    .block-container { padding-left: 10px !important; padding-right: 10px !important; padding-top: 12px !important; }
+    .topbar { margin-bottom: 20px; }
+    .st-key-hero_left_container { padding: 24px !important; border-radius: 18px !important; }
+    .hero-card-right { padding: 20px; border-radius: 18px; }
+    .st-key-quiz_card_container { padding: 20px !important; border-radius: 18px !important; }
+    .st-key-result_card_container { padding: 20px !important; border-radius: 18px !important; }
+    .matrix { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .matrix div { border-radius: 12px; padding: 7px; font-size: 10px; }
   }
 </style>
 """
@@ -685,116 +1015,142 @@ def rank_types(scores):
   return sorted(ranked, key=lambda item: item[1])
 
 
-def render_brand():
-  st.markdown(
+def render_topbar():
+  st.html(
     """
-    <div class="brand">
-      <div class="brand-mark"><span></span></div>
-      <div>Workstyle 16</div>
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <span>Workstyle 16</span>
+      </div>
+      <div class="pill">MBTI-inspired · Technical Workstyle</div>
     </div>
-    """,
-    unsafe_allow_html=True,
+    """
   )
 
 
 def render_intro():
-  st.markdown(
-    '<div class="pill">MBTI-inspired · Technical Workstyle</div>',
-    unsafe_allow_html=True,
-  )
-  st.markdown(
-    """
-    <div class="eyebrow">For engineers & scientists</div>
-    <div class="hero-title">30 scenes.<br>One closest pattern.</div>
-    <div class="hero-copy">
-      일반적인 성격 질문 대신, 연구와 엔지니어링의 실제 의사결정 장면에서
-      당신의 작업 스타일을 관찰합니다. 정밀한 심리측정보다는 16개의 워크스타일
-      프로토타입 중 어디에 가장 가까운지 빠르게 탐색하는 테스트입니다.
-    </div>
-    """,
-    unsafe_allow_html=True,
-  )
+  col1, col2 = st.columns([1.15, 0.85], gap="large")
 
-  if st.button("테스트 시작 →", type="primary", use_container_width=False):
-    reset_test()
-    st.rerun()
-
-  st.write("")
-  c1, c2, c3 = st.columns(3)
-  cards = [
-    ("01 · 정보 밀도", "비슷한 질문을 반복하지 않습니다. 각 문항은 서로 다른 작업 장면에서 새로운 신호를 추가합니다."),
-    ("02 · 상황 기반", "코드 리뷰, 연구 설계, 디버깅, 협업, 불확실성처럼 구체적인 기술·연구 상황을 묻습니다."),
-    ("03 · 근접 패턴", "하나의 타입을 단정하기보다 가장 가까운 패턴과 인접 후보를 함께 보여줍니다."),
-  ]
-  for col, (title, body) in zip((c1, c2, c3), cards):
-    with col:
-      st.markdown(
-        f'<div class="mini-card"><strong>{title}</strong><span>{body}</span></div>',
-        unsafe_allow_html=True,
+  with col1:
+    with st.container(key="hero_left_container"):
+      st.html(
+        """
+        <div>
+          <div class="eyebrow">For engineers & scientists</div>
+          <h1 class="hero-title">30 scenes.<br>One closest pattern.</h1>
+          <p class="hero-copy">
+            일반적인 성격 질문 대신, 연구와 엔지니어링의 실제 의사결정 장면에서
+            당신의 작업 스타일을 관찰합니다. 정밀한 심리측정보다는 16개의 워크스타일
+            프로토타입 중 어디에 가장 가까운지 빠르게 탐색하는 테스트입니다.
+          </p>
+        </div>
+        """
       )
+
+      btn_left, btn_right, _ = st.columns([1.1, 1.2, 1.0])
+      with btn_left:
+        if st.button("테스트 시작", key="start_btn"):
+          reset_test()
+          st.rerun()
+      with btn_right:
+        st.html(
+          '<a href="#principles" class="btn-anchor">설계 원칙 보기</a>'
+        )
+
+  with col2:
+    st.html(
+      """
+      <aside class="hero-card-right">
+        <div class="hero-stats">
+          <div class="stat"><strong>30</strong><span>고밀도 상황형 문항</span></div>
+          <div class="stat"><strong>4</strong><span>연속적 성향 축</span></div>
+          <div class="stat"><strong>16</strong><span>기술 작업 아키타입</span></div>
+        </div>
+        <div class="matrix" aria-label="16 archetypes">
+          <div>INTJ</div><div>INTP</div><div>ENTJ</div><div>ENTP</div>
+          <div>INFJ</div><div>INFP</div><div>ENFJ</div><div>ENFP</div>
+          <div>ISTJ</div><div>ISFJ</div><div>ESTJ</div><div>ESFJ</div>
+          <div>ISTP</div><div>ISFP</div><div>ESTP</div><div>ESFP</div>
+        </div>
+      </aside>
+      """
+    )
+
+  st.html(
+    """
+    <section class="philosophy" id="principles">
+      <article class="mini-card">
+        <h3>01 · 정보 밀도</h3>
+        <p>비슷한 질문을 반복하지 않습니다. 각 문항은 서로 다른 작업 장면을 통해 새로운 신호를 추가합니다.</p>
+      </article>
+      <article class="mini-card">
+        <h3>02 · 상황 기반</h3>
+        <p>추상적인 자기평가 대신 코드 리뷰, 연구 설계, 디버깅, 협업, 불확실성 같은 구체적 상황을 묻습니다.</p>
+      </article>
+      <article class="mini-card">
+        <h3>03 · 근접 패턴</h3>
+        <p>가짜 정밀도를 피합니다. 하나의 타입을 단정하기보다 가장 가까운 패턴과 인접 후보를 함께 보여줍니다.</p>
+      </article>
+    </section>
+    """
+  )
 
 
 def render_quiz():
   current = st.session_state.current
   question = QUESTIONS[current]
+  progress_pct = ((current + 1) / len(QUESTIONS)) * 100
 
-  left, right = st.columns([1, 3.1], gap="large")
+  left, right = st.columns([1, 2.7], gap="large")
 
   with left:
-    st.markdown(
+    st.html(
       f"""
-      <div class="progress-meta">진행률</div>
-      <div class="progress-count">{current + 1} / {len(QUESTIONS)}</div>
-      """,
-      unsafe_allow_html=True,
+      <aside class="quiz-sidebar">
+        <small>진행률</small>
+        <strong>{current + 1} / {len(QUESTIONS)}</strong>
+        <div class="progress-track">
+          <div class="progress-bar-fill" style="width: {progress_pct:.1f}%;"></div>
+        </div>
+        <small>
+          가장 “이상적인 나”가 아니라, 실제로 비슷한 상황에서 반복적으로 보이는 행동에 가까운 답을 선택하세요.
+        </small>
+      </aside>
+      """
     )
-    st.progress((current + 1) / len(QUESTIONS))
-    st.caption(
-      '가장 "이상적인 나"가 아니라, 비슷한 상황에서 실제로 반복되는 행동에 가까운 답을 선택하세요.'
-    )
-
-    if current > 0:
-      if st.button("← 이전 문항", key="previous", use_container_width=True):
-        go_previous()
-        st.rerun()
 
   with right:
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
-    st.markdown(
-      f'<div class="question-number">Question {current + 1:02d}</div>',
-      unsafe_allow_html=True,
-    )
-    st.markdown(
-      f'<div class="question-text">{question["q"]}</div>',
-      unsafe_allow_html=True,
-    )
+    # Selected button highlighting if navigating back
+    selected_idx = st.session_state.responses[current]
+    if selected_idx is not None:
+      st.html(
+        f"""
+        <style>
+          .st-key-q_{current}_a_{selected_idx} button {{
+            border-color: #8ea2ff !important;
+            background: rgba(142, 162, 255, 0.14) !important;
+          }}
+        </style>
+        """
+      )
 
-    for index, (label, _) in enumerate(question["a"]):
-      if st.button(
-        label,
-        key=f"q{current}_a{index}",
-        use_container_width=True,
-      ):
-        answer_question(index)
+    with st.container(key="quiz_card_container"):
+      st.html(
+        f"""
+        <div class="q-number">Question {current + 1:02d}</div>
+        <h2 class="question-text">{question["q"]}</h2>
+        """
+      )
+
+      for index, (label, _) in enumerate(question["a"]):
+        if st.button(label, key=f"q_{current}_a_{index}"):
+          answer_question(index)
+          st.rerun()
+
+      if st.button("이전", key="prev_btn", disabled=(current == 0)):
+        go_previous()
         st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-
-def render_axis(axis, left_letter, right_letter, left_desc, right_desc, score):
-  position = (score + 1) / 2 * 100
-  st.markdown(
-    f"""
-    <div class="axis-labels">
-      <div><span class="axis-title">{left_letter}</span> · {left_desc}</div>
-      <div>{right_desc} · <span class="axis-title">{right_letter}</span></div>
-    </div>
-    <div class="axis-track">
-      <div class="axis-dot" style="left:{position:.1f}%"></div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-  )
 
 
 def render_result():
@@ -805,85 +1161,90 @@ def render_result():
 
   fit = max(0, min(99, round((1 - best_distance / 4) * 100)))
 
-  st.markdown('<div class="glass">', unsafe_allow_html=True)
+  alt_cards_html = "".join([
+    f'<div class="alt"><strong>{alt_type}</strong><span>{TYPE_PROFILES[alt_type][0]} · #{rank_idx} nearest</span></div>'
+    for rank_idx, (alt_type, _) in enumerate(ranked[1:4], start=2)
+  ])
 
-  top_left, top_right = st.columns([4, 1], gap="large")
-  with top_left:
-    st.markdown('<div class="eyebrow">Closest workstyle pattern</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="type-code">{best_type}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="type-name">{name}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="summary">{summary}</div>', unsafe_allow_html=True)
-
-  with top_right:
-    st.markdown(
-      f'<div class="fit-box"><span>prototype fit</span><strong>{fit}%</strong></div>',
-      unsafe_allow_html=True,
-    )
-
-  st.write("")
-  st.write("")
-
-  for axis, left_letter, right_letter, left_desc, right_desc in AXES:
-    render_axis(
-      axis,
-      left_letter,
-      right_letter,
-      left_desc,
-      right_desc,
-      scores[axis],
-    )
-
-  st.write("")
-  st.markdown('<div class="eyebrow">Nearest alternatives</div>', unsafe_allow_html=True)
-
-  cols = st.columns(3)
-  for rank, (col, (type_code, _)) in enumerate(zip(cols, ranked[1:4]), start=2):
-    alt_name, _ = TYPE_PROFILES[type_code]
-    with col:
-      st.markdown(
-        f"""
-        <div class="alt-card">
-          <strong>{type_code}</strong>
-          <span>{alt_name} · #{rank} nearest</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-      )
-
-  st.markdown(
-    """
-    <div class="fineprint">
-      이 테스트는 공식 MBTI® 검사나 임상적 성격 검사가 아닙니다.
-      결과는 기술·연구 환경에서의 작업 스타일을 탐색하기 위한 프로토타입이며,
-      상황과 역할에 따라 다르게 나타날 수 있습니다.
+  axes_html = "".join([
+    f"""
+    <div class="axis-row">
+      <div class="axis-label">{left_letter}<small>{left_desc}</small></div>
+      <div class="axis-track">
+        <div class="axis-mid"></div>
+        <div class="axis-dot" style="left: {((scores[axis] + 1) / 2) * 100:.1f}%;"></div>
+      </div>
+      <div class="axis-label right"><span class="axis-letter">{right_letter}</span><small>{right_desc}</small></div>
     </div>
-    """,
-    unsafe_allow_html=True,
+    """
+    for axis, left_letter, right_letter, left_desc, right_desc in AXES
+  ])
+
+  alt_types_str = ", ".join(type_code for type_code, _ in ranked[1:4])
+  share_text_raw = (
+    f"Workstyle 16 결과: {best_type} — {name}\n"
+    f"근접 타입: {alt_types_str}\n"
+    f"Prototype fit: {fit}%"
   )
+  js_share_text = json.dumps(share_text_raw)
 
-  st.write("")
-  b1, b2 = st.columns([1, 2])
-  with b1:
-    if st.button("다시 테스트", type="primary", use_container_width=True):
-      reset_test()
-      st.rerun()
+  with st.container(key="result_card_container"):
+    st.html(
+      f"""
+      <div class="result-head">
+        <div>
+          <div class="eyebrow">Closest workstyle pattern</div>
+          <div class="type-code">{best_type}</div>
+          <div class="type-name">{name}</div>
+          <p class="type-summary">{summary}</p>
+        </div>
+        <div class="distance-badge">
+          <span>prototype fit</span>
+          <strong>{fit}%</strong>
+        </div>
+      </div>
 
-  with b2:
-    alt_types = ", ".join(type_code for type_code, _ in ranked[1:4])
-    share_text = (
-      f"Workstyle 16 결과: {best_type} — {name}\n"
-      f"근접 타입: {alt_types}\n"
-      f"Prototype fit: {fit}%"
+      <div class="axes">
+        {axes_html}
+      </div>
+
+      <div>
+        <div class="eyebrow">Nearest alternatives</div>
+        <div class="alternatives">
+          {alt_cards_html}
+        </div>
+      </div>
+
+      <p class="fineprint">
+        이 테스트는 공식 MBTI® 검사나 임상적 성격 검사가 아닙니다. 결과는 기술·연구 환경에서의 작업 스타일을
+        탐색하기 위한 프로토타입이며, 상황과 역할에 따라 다르게 나타날 수 있습니다.
+      </p>
+      """
     )
-    st.code(share_text, language=None)
 
-  st.markdown('</div>', unsafe_allow_html=True)
+    action_col1, action_col2, _ = st.columns([1.1, 1.3, 2.0])
+    with action_col1:
+      if st.button("다시 테스트", key="restart_btn"):
+        reset_test()
+        st.rerun()
+
+    with action_col2:
+      st.html(
+        f"""
+        <button class="btn-anchor" id="copyResultBtn" onclick='
+          navigator.clipboard.writeText({js_share_text});
+          this.textContent = "복사됨";
+          setTimeout(() => this.textContent = "결과 복사", 1400);
+        '>결과 복사</button>
+        """,
+        unsafe_allow_javascript=True,
+      )
 
 
 def main():
   init_state()
-  st.markdown(CSS, unsafe_allow_html=True)
-  render_brand()
+  st.html(CSS)
+  render_topbar()
 
   if st.session_state.screen == "intro":
     render_intro()
@@ -892,11 +1253,11 @@ def main():
   else:
     render_result()
 
-  st.markdown(
-    '<div class="footer">Workstyle 16 · Streamlit prototype</div>',
-    unsafe_allow_html=True,
+  st.html(
+    '<div class="footer">Workstyle 16 · Technical Archetype Assessment</div>'
   )
 
 
 if __name__ == "__main__":
   main()
+
